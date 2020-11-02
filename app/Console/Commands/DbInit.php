@@ -4,8 +4,9 @@
 namespace App\Console\Commands;
 
 
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
-use BaoPham\DynamoDb\Facades\DynamoDb;
+use Aws\DynamoDb\Marshaler;
 use DateTime;
 use Faker\Factory;
 use Illuminate\Console\Command;
@@ -13,21 +14,35 @@ use Ramsey\Uuid\Uuid;
 
 class DbInit extends Command
 {
-    protected $signature = "db:init";
+    protected $signature = "db:init {--seed}";
 
     protected $description = "Create database and populate data";
+
+    /** @var DynamoDbClient $client */
+    private $client;
+
+    /**
+     * DbInit constructor.
+     * @param DynamoDbClient $client
+     */
+    public function __construct(DynamoDbClient $client)
+    {
+        parent::__construct();
+        $this->client = $client;
+    }
+
 
     public function handle()
     {
         try {
-            DynamoDb::client()->deleteTable([
-                'TableName' => 'led'
+            $this->client->deleteTable([
+                'TableName' => 'led',
             ]);
         } catch (DynamoDbException $e) {
             // nothing
         }
 
-        DynamoDb::client()->createTable([
+        $table = [
             'TableName' => 'led',
             'AttributeDefinitions' => [
                 [
@@ -46,20 +61,24 @@ class DbInit extends Command
                 'WriteCapacityUnits' => 20,
                 'OnDemand' => false,
             ],
-        ]);
+        ];
+        $this->client->createTable($table);
 
-        $faker = Factory::create();
-        for ($i = 0; $i < 10; $i++) {
-            $led = [
-                'id' => Uuid::uuid4()->toString(),
-                'name' => $faker->name,
-                'lastUpdate' => (new DateTime())->getTimestamp()
-            ];
+        if ($this->option('seed')) {
+            $faker = Factory::create();
+            $marshaller = new Marshaler();
+            for ($i = 0; $i < 10; $i++) {
+                $led = [
+                    'id' => Uuid::uuid4()->toString(),
+                    'name' => $faker->name,
+                    'lastUpdate' => (new DateTime())->getTimestamp()
+                ];
 
-            DynamoDb::table('led')
-                ->setItem(DynamoDb::marshalItem($led))
-                ->prepare()
-                ->putItem();
+                $this->client->putItem([
+                    'TableName' => 'led',
+                    'Item' => $marshaller->marshalItem($led)
+                ]);
+            }
         }
     }
 }
