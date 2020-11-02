@@ -6,6 +6,8 @@
     "type": "project",
     "require": {
         "php": "^7.2.5",
+        "baopham/dynamodb": "^6.1",
+        "irazasyed/larasupport": "^1.7",
         "laravel/lumen-framework": "^7.0"
     },
     "require-dev": {
