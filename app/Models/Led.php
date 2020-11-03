@@ -18,9 +18,12 @@ class Led
      * @param int $lastUpdate
      * @param null|string $id
      */
-    public function __construct(string $name, int $lastUpdate, $id = null)
+    public function __construct(string $name, int $lastUpdate, string $id = null)
     {
-        $this->id = $id ?? Uuid::uuid4()->toString();
+        if (empty($id)) {
+            $id = Uuid::uuid4()->toString();
+        }
+        $this->id = $id; // ?? Uuid::uuid4()->toString();
         $this->name = $name;
         $this->lastUpdate = $lastUpdate;
     }
@@ -49,4 +52,12 @@ class Led
         return $this->lastUpdate;
     }
 
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'lastUpdate' => $this->lastUpdate
+        ];
+    }
 }

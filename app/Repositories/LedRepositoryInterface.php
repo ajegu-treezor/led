@@ -4,6 +4,7 @@
 namespace App\Repositories;
 
 
+use App\Exceptions\LedInvalidException;
 use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
 
@@ -20,4 +21,10 @@ interface LedRepositoryInterface
      * @throws LedNotFoundException
      */
     public function get(string $ledId): Led;
+
+    /**
+     * @param Led $led
+     * @throws LedInvalidException
+     */
+    public function create(Led $led): void;
 }

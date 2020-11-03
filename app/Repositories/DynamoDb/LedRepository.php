@@ -4,6 +4,7 @@
 namespace App\Repositories\DynamoDb;
 
 
+use App\Exceptions\LedInvalidException;
 use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
 use App\Repositories\LedRepositoryInterface;
@@ -63,6 +64,27 @@ class LedRepository implements LedRepositoryInterface
 
         return $this->map($item);
     }
+
+    public function create(Led $led): void
+    {
+        $ledExists = true;
+        try {
+            $this->get($led->getId());
+        } catch (LedNotFoundException $exception) {
+            $ledExists = false;
+        }
+
+        if ($ledExists) {
+            throw new LedInvalidException("The led already exists with ID {$led->getId()}");
+        }
+
+        $marshaller = new Marshaler();
+        $this->client->putItem([
+            'TableName' => 'led',
+            'Item' => $marshaller->marshalItem($led->toArray())
+        ]);
+    }
+
 
     /**
      * @param array $item
