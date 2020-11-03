@@ -27,7 +27,7 @@ class LedAllCommandTest extends TestCase
         $mapper = new LedDTOMapper();
         $response = new TestResponse();
 
-        $command = new LedAllCommand($repo, $response, $mapper);
+        $command = new LedAllCommand($repo, $mapper, $response);
         $command->execute();
 
         $this->assertNotEmpty($response->getData());
