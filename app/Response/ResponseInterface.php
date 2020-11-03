@@ -6,5 +6,8 @@ namespace App\Response;
 
 interface ResponseInterface
 {
-    public function setData(array $data): void;
+    /**
+     * @param mixed $data
+     */
+    public function setData($data): void;
 }

@@ -8,19 +8,20 @@ use App\Response\ResponseInterface;
 
 class TestResponse implements ResponseInterface
 {
-    /** @var array */
+    /** @var mixed */
     private $data;
 
-    public function setData(array $data): void
+    public function setData($data): void
     {
         $this->data = $data;
     }
 
     /**
-     * @return array
+     * @return mixed
      */
-    public function getData(): array
+    public function getData()
     {
         return $this->data;
     }
+
 }
