@@ -7,6 +7,7 @@ namespace App\Repositories\DynamoDb;
 use App\Exceptions\LedInvalidException;
 use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
+use App\Repositories\Entity\LedEntity;
 use App\Repositories\LedRepositoryInterface;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Marshaler;
@@ -16,13 +17,18 @@ class LedRepository implements LedRepositoryInterface
     /** @var DynamoDbClient $client */
     private $client;
 
+    /** @var Marshaler */
+    private $marshaler;
+
     /**
      * LedRepository constructor.
      * @param DynamoDbClient $client
+     * @param Marshaler $marshaler
      */
-    public function __construct(DynamoDbClient $client)
+    public function __construct(DynamoDbClient $client, Marshaler $marshaler)
     {
         $this->client = $client;
+        $this->marshaler = $marshaler;
     }
 
 
@@ -32,7 +38,7 @@ class LedRepository implements LedRepositoryInterface
     public function all(): array
     {
         $result = $this->client->scan([
-            'TableName' => 'led'
+            'TableName' => LedEntity::TABLE_NAME
         ]);
 
         $leds = [];
@@ -48,10 +54,9 @@ class LedRepository implements LedRepositoryInterface
      */
     public function get(string $ledId): Led
     {
-        $marshaller = new Marshaler();
         $result = $this->client->getItem([
-            'TableName' => 'led',
-            'Key' => $marshaller->marshalItem([
+            'TableName' => LedEntity::TABLE_NAME,
+            'Key' => $this->marshaler->marshalItem([
                 'id' => $ledId
             ])
         ]);
@@ -65,6 +70,9 @@ class LedRepository implements LedRepositoryInterface
         return $this->map($item);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function create(Led $led): void
     {
         $ledExists = true;
@@ -78,10 +86,32 @@ class LedRepository implements LedRepositoryInterface
             throw new LedInvalidException("The led already exists with ID {$led->getId()}");
         }
 
-        $marshaller = new Marshaler();
+        $entity = LedEntity::map($led);
+        $item = $this->marshaler->marshalItem($entity->toArray());
+
         $this->client->putItem([
-            'TableName' => 'led',
-            'Item' => $marshaller->marshalItem($led->toArray())
+            'TableName' => LedEntity::TABLE_NAME,
+            'Item' => $item
+        ]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function update(Led $led): void
+    {
+        try {
+            $this->get($led->getId());
+        } catch (LedNotFoundException $exception) {
+            throw new LedInvalidException("The led not exists with ID {$led->getId()}");
+        }
+
+        $entity = LedEntity::map($led);
+        $item = $this->marshaler->marshalItem($entity->toArray());
+
+        $this->client->putItem([
+            'TableName' => LedEntity::TABLE_NAME,
+            'Item' => $item
         ]);
     }
 
@@ -92,10 +122,13 @@ class LedRepository implements LedRepositoryInterface
      */
     private function map(array $item): Led
     {
+        $unmarshalItem = $this->marshaler->unmarshalItem($item);
+        $ledEntity = LedEntity::fill($unmarshalItem);
+
         return new Led(
-            $item['name']['S'],
-            $item['lastUpdate']['N'],
-            $item['id']['S']
+            $ledEntity->getId(),
+            $ledEntity->getName(),
+            $ledEntity->getLastUpdate()
         );
     }
 }

@@ -4,13 +4,13 @@
 namespace App\Console\Commands;
 
 
+use App\Repositories\Entity\LedEntity;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
 use DateTime;
 use Faker\Factory;
 use Illuminate\Console\Command;
-use Ramsey\Uuid\Uuid;
 
 class DbInit extends Command
 {
@@ -36,23 +36,23 @@ class DbInit extends Command
     {
         try {
             $this->client->deleteTable([
-                'TableName' => 'led',
+                'TableName' => LedEntity::TABLE_NAME,
             ]);
         } catch (DynamoDbException $e) {
             // nothing
         }
 
         $table = [
-            'TableName' => 'led',
+            'TableName' => LedEntity::TABLE_NAME,
             'AttributeDefinitions' => [
                 [
-                    'AttributeName' => 'id',
+                    'AttributeName' => LedEntity::PRIMARY_KEY,
                     'AttributeType' => 'S',
                 ]
             ],
             'KeySchema' => [
                 [
-                    'AttributeName' => 'id',
+                    'AttributeName' => LedEntity::PRIMARY_KEY,
                     'KeyType' => 'HASH',
                 ]
             ],
@@ -68,15 +68,14 @@ class DbInit extends Command
             $faker = Factory::create();
             $marshaller = new Marshaler();
             for ($i = 0; $i < 10; $i++) {
-                $led = [
-                    'id' => Uuid::uuid4()->toString(),
-                    'name' => $faker->name,
-                    'lastUpdate' => (new DateTime())->getTimestamp()
-                ];
+                $led = new LedEntity();
+                $led->setId($faker->uuid)
+                    ->setName($faker->name)
+                    ->setLastUpdate((new DateTime())->getTimestamp());
 
                 $this->client->putItem([
                     'TableName' => 'led',
-                    'Item' => $marshaller->marshalItem($led)
+                    'Item' => $marshaller->marshalItem($led->toArray())
                 ]);
             }
         }

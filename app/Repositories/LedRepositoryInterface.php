@@ -27,4 +27,10 @@ interface LedRepositoryInterface
      * @throws LedInvalidException
      */
     public function create(Led $led): void;
+
+    /**
+     * @param Led $led
+     * @throws LedInvalidException
+     */
+    public function update(Led $led): void;
 }

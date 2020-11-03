@@ -4,60 +4,51 @@
 namespace App\Models;
 
 
-use Ramsey\Uuid\Uuid;
-
 class Led
 {
+    /** @var string  */
     private $id;
+
+    /** @var string  */
     private $name;
+
+    /** @var int  */
     private $lastUpdate;
 
     /**
      * Led constructor.
+     * @param string $id
      * @param string $name
      * @param int $lastUpdate
-     * @param null|string $id
      */
-    public function __construct(string $name, int $lastUpdate, string $id = null)
+    public function __construct(string $id, string $name, int $lastUpdate)
     {
-        if (empty($id)) {
-            $id = Uuid::uuid4()->toString();
-        }
-        $this->id = $id; // ?? Uuid::uuid4()->toString();
+        $this->id = $id;
         $this->name = $name;
         $this->lastUpdate = $lastUpdate;
     }
 
     /**
-     * @return mixed|string
+     * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getLastUpdate()
+    public function getLastUpdate(): int
     {
         return $this->lastUpdate;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'lastUpdate' => $this->lastUpdate
-        ];
     }
 }

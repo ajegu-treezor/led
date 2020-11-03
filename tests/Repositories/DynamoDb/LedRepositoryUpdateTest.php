@@ -5,7 +5,6 @@ namespace Repositories\DynamoDb;
 
 
 use App\Exceptions\LedInvalidException;
-use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
 use App\Repositories\DynamoDb\LedRepository;
 use App\Repositories\LedRepositoryInterface;
@@ -13,34 +12,9 @@ use DateTime;
 use Faker\Factory;
 use TestCase;
 
-class LedRepositoryCreateTest extends TestCase
+class LedRepositoryUpdateTest extends TestCase
 {
-    public function testCreateShouldBeOk()
-    {
-        $this->artisan('db:init');
-
-        /** @var LedRepositoryInterface $repo */
-        $repo = $this->app->make(LedRepository::class);
-
-        $faker = Factory::create();
-        $led = new Led(
-            uniqid(),
-            $faker->name,
-            (new DateTime())->getTimestamp()
-        );
-        $repo->create($led);
-
-        $thrException = false;
-        try {
-            $repo->get($led->getId());
-        } catch (LedNotFoundException $exception) {
-            $thrException = true;
-        }
-
-        $this->assertFalse($thrException, "Get a led after to create it should be OK.");
-    }
-
-    public function testCreateWithBadValueShouldThrowException()
+    public function testUpdateShouldBeOk()
     {
         $this->artisan('db:init --seed');
 
@@ -57,14 +31,35 @@ class LedRepositoryCreateTest extends TestCase
             (new DateTime())->getTimestamp()
         );
 
+        $repo->update($led);
+
+        $ledUpdated = $repo->get($led->getId());
+
+        $this->assertEquals($led->getName(), $ledUpdated->getName());
+        $this->assertEquals($led->getLastUpdate(), $ledUpdated->getLastUpdate());
+    }
+
+    public function testUpdateWithUnknownLedShouldThrowException()
+    {
+        $this->artisan('db:init');
+
+        /** @var LedRepositoryInterface $repo */
+        $repo = $this->app->make(LedRepository::class);
+
+        $faker = Factory::create();
+        $led = new Led(
+            $faker->uuid,
+            $faker->name,
+            (new DateTime())->getTimestamp()
+        );
 
         $thrException = false;
         try {
-            $repo->create($led);
+            $repo->update($led);
         } catch (LedInvalidException $exception) {
             $thrException = true;
         }
 
-        $this->assertTrue($thrException, "Create led with an existing ID should throw an exception.");
+        $this->assertTrue($thrException, "Update with an unknown led should be throw an exception.");
     }
 }
