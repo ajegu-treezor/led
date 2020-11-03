@@ -26,7 +26,7 @@ class LedAllCommand implements Command
      * @param ResponseInterface $response
      * @param LedDTOMapper $ledMapper
      */
-    public function __construct(LedRepositoryInterface $ledRepo, ResponseInterface $response, LedDTOMapper $ledMapper)
+    public function __construct(LedRepositoryInterface $ledRepo, LedDTOMapper $ledMapper, ResponseInterface $response)
     {
         $this->ledRepo = $ledRepo;
         $this->ledMapper = $ledMapper;

@@ -1,6 +1,8 @@
 <?php /** @noinspection PhpUnusedParameterInspection */
 
 use App\Providers\DynamoDbProvider;
+use App\Repositories\DynamoDb\LedRepository;
+use App\Repositories\LedRepositoryInterface;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -98,6 +100,7 @@ $app->configure('app');
 // $app->register(App\Providers\EventServiceProvider::class);
 $app->register(Aws\Laravel\AwsServiceProvider::class);
 $app->register(DynamoDbProvider::class);
+$app->bind(LedRepositoryInterface::class, LedRepository::class);
 
 
 /*
