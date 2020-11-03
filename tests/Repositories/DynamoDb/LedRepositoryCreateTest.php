@@ -9,7 +9,6 @@ use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
 use App\Repositories\DynamoDb\LedRepository;
 use App\Repositories\LedRepositoryInterface;
-use DateTime;
 use Faker\Factory;
 use TestCase;
 
@@ -26,7 +25,7 @@ class LedRepositoryCreateTest extends TestCase
         $led = new Led(
             uniqid(),
             $faker->name,
-            (new DateTime())->getTimestamp()
+            $faker->dateTime->getTimestamp()
         );
         $repo->create($led);
 
@@ -54,7 +53,7 @@ class LedRepositoryCreateTest extends TestCase
         $led = new Led(
             $existingLed->getId(),
             $faker->name,
-            (new DateTime())->getTimestamp()
+            $faker->dateTime->getTimestamp()
         );
 
 

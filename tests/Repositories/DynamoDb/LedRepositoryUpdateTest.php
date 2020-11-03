@@ -8,7 +8,6 @@ use App\Exceptions\LedInvalidException;
 use App\Models\Led;
 use App\Repositories\DynamoDb\LedRepository;
 use App\Repositories\LedRepositoryInterface;
-use DateTime;
 use Faker\Factory;
 use TestCase;
 
@@ -28,7 +27,7 @@ class LedRepositoryUpdateTest extends TestCase
         $led = new Led(
             $existingLed->getId(),
             $faker->name,
-            (new DateTime())->getTimestamp()
+            $faker->dateTime->getTimestamp()
         );
 
         $repo->update($led);
@@ -50,7 +49,7 @@ class LedRepositoryUpdateTest extends TestCase
         $led = new Led(
             $faker->uuid,
             $faker->name,
-            (new DateTime())->getTimestamp()
+            $faker->dateTime->getTimestamp()
         );
 
         $thrException = false;

@@ -8,7 +8,6 @@ use App\Repositories\Entity\LedEntity;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
-use DateTime;
 use Faker\Factory;
 use Illuminate\Console\Command;
 
@@ -71,7 +70,7 @@ class DbInit extends Command
                 $led = new LedEntity();
                 $led->setId($faker->uuid)
                     ->setName($faker->name)
-                    ->setLastUpdate((new DateTime())->getTimestamp());
+                    ->setLastUpdate($faker->dateTime->getTimestamp());
 
                 $this->client->putItem([
                     'TableName' => 'led',
