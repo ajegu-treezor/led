@@ -6,19 +6,18 @@ namespace Repositories\DynamoDb;
 
 use App\Models\Led;
 use App\Repositories\DynamoDb\LedRepository;
+use App\Repositories\LedRepositoryInterface;
 use \TestCase;
 
 class LedRepositoryAllTest extends TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-    }
-
     public function testAllShouldBeOk()
     {
         $this->artisan('db:init --seed');
+
+        /** @var LedRepositoryInterface $repo */
         $repo = $this->app->make(LedRepository::class);
+
         $leds = $repo->all();
 
         $this->assertNotEmpty($leds);
