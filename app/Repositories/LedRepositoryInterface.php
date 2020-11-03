@@ -33,4 +33,10 @@ interface LedRepositoryInterface
      * @throws LedInvalidException
      */
     public function update(Led $led): void;
+
+    /**
+     * @param string $ledId
+     * @throws LedInvalidException
+     */
+    public function delete(string $ledId): void;
 }

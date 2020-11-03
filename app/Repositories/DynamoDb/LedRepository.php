@@ -115,6 +115,22 @@ class LedRepository implements LedRepositoryInterface
         ]);
     }
 
+    public function delete(string $ledId): void
+    {
+        try {
+            $this->get($ledId);
+        } catch (LedNotFoundException $exception) {
+            throw new LedInvalidException("The led not exists with ID {$ledId}");
+        }
+
+        $this->client->deleteItem([
+            'TableName' => LedEntity::TABLE_NAME,
+            'Key' => $this->marshaler->marshalItem([
+                'id' => $ledId
+            ])
+        ]);
+    }
+
 
     /**
      * @param array $item
