@@ -1,6 +1,8 @@
 <?php /** @noinspection PhpUnusedParameterInspection */
 
+use App\Http\Middleware\CorsMiddleware;
 use App\Providers\DynamoDbProvider;
+use App\Providers\SerializerProvider;
 use App\Repositories\DynamoDb\LedRepository;
 use App\Repositories\LedRepositoryInterface;
 
@@ -84,6 +86,10 @@ $app->configure('app');
 //     'auth' => App\Http\Middleware\Authenticate::class,
 // ]);
 
+$app->middleware([
+    CorsMiddleware::class
+]);
+
 /*
 |--------------------------------------------------------------------------
 | Register Service Providers
@@ -100,6 +106,7 @@ $app->configure('app');
 // $app->register(App\Providers\EventServiceProvider::class);
 $app->register(Aws\Laravel\AwsServiceProvider::class);
 $app->register(DynamoDbProvider::class);
+$app->register(SerializerProvider::class);
 $app->bind(LedRepositoryInterface::class, LedRepository::class);
 
 

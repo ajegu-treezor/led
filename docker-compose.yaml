@@ -1,27 +1,27 @@
 version: '3'
 
 services:
-  dynamodb:
-    image: amazon/dynamodb-local:latest
-    container_name: dynamodb
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
-  swagger-editor:
-    image: swaggerapi/swagger-editor
-    volumes:
-      - ./:/usr/share/nginx/html/project
-    environment:
-      - URL=/project/swagger.json
-    ports:
-      - "8080:8080"
-  dynamodbgui:
-    build: ./images/dynamogui
-    links:
-      - dynamodb
-    environment:
-      DYNAMO_ENDPOINT: http://dynamodb:8000
-    command: ["dynamodb-admin"]
-    ports:
-      - "8001:8001"
+#  dynamodb:
+#    image: amazon/dynamodb-local:latest
+#    container_name: dynamodb
+#    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+#  swagger-editor:
+#    image: swaggerapi/swagger-editor
+#    volumes:
+#      - ./:/usr/share/nginx/html/project
+#    environment:
+#      - URL=/project/swagger.json
+#    ports:
+#      - "8080:8080"
+#  dynamodbgui:
+#    build: ./images/dynamogui
+#    links:
+#      - dynamodb
+#    environment:
+#      DYNAMO_ENDPOINT: http://dynamodb:8000
+#    command: ["dynamodb-admin"]
+#    ports:
+#      - "8001:8001"
   nginx:
     build: ./images/nginx
     command: nginx -g "daemon off;"
@@ -29,11 +29,13 @@ services:
       - php
     ports:
       - "80:80"
+    volumes:
+      - ./:/var/www/html
   php:
     build: ./images/php
     volumes:
       - ./:/var/www/html
     working_dir: /var/www/html
     command: php-fpm
-    #env_file:
-    #  - .env
+    environment:
+      - PHP_IDE_CONFIG=serverName=led-docker

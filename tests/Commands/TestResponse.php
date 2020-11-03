@@ -24,4 +24,10 @@ class TestResponse implements ResponseInterface
         return $this->data;
     }
 
+    public function setStatusCode(int $code): void
+    {
+
+    }
+
+
 }

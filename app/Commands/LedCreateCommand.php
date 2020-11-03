@@ -35,6 +35,10 @@ class LedCreateCommand implements Command
     }
 
 
+    /**
+     * @throws \App\Exceptions\LedInvalidException
+     * @throws \App\Exceptions\ValidationException
+     */
     public function execute(): void
     {
         $this->request->validate();

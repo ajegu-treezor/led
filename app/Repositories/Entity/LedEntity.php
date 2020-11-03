@@ -3,14 +3,8 @@
 
 namespace App\Repositories\Entity;
 
-
-use App\Models\Led;
-
-class LedEntity extends Entity
+class LedEntity implements Entity
 {
-    const TABLE_NAME = 'led';
-    const PRIMARY_KEY = 'id';
-
     /** @var string */
     private $id;
 
@@ -19,7 +13,6 @@ class LedEntity extends Entity
 
     /** @var int */
     private $lastUpdate;
-
 
     /**
      * @return string
@@ -73,15 +66,5 @@ class LedEntity extends Entity
     {
         $this->lastUpdate = $lastUpdate;
         return $this;
-    }
-
-    public static function map(Led $led): self
-    {
-        $entity = new static();
-        $entity->setId($led->getId())
-            ->setName($led->getName())
-            ->setLastUpdate($led->getLastUpdate());
-
-        return $entity;
     }
 }

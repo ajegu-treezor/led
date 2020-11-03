@@ -4,49 +4,56 @@
 namespace App\Repositories\DynamoDb;
 
 
+use App\Exceptions\EntityNotFoundException;
+use App\Exceptions\EntitySerializeException;
 use App\Exceptions\LedInvalidException;
 use App\Exceptions\LedNotFoundException;
 use App\Models\Led;
 use App\Repositories\Entity\LedEntity;
 use App\Repositories\LedRepositoryInterface;
-use Aws\DynamoDb\DynamoDbClient;
-use Aws\DynamoDb\Marshaler;
+use App\Repositories\Mapper\LedEntityMapper;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Serializer;
 
 class LedRepository implements LedRepositoryInterface
 {
-    /** @var DynamoDbClient $client */
-    private $client;
+    /** @var EntityManager */
+    private $manager;
 
-    /** @var Marshaler */
-    private $marshaler;
+    /** @var LedEntityMapper */
+    private $ledMapper;
+
+    /** @var Serializer */
+    protected $serializer;
 
     /**
      * LedRepository constructor.
-     * @param DynamoDbClient $client
-     * @param Marshaler $marshaler
+     * @param EntityManager $manager
+     * @param LedEntityMapper $ledMapper
+     * @param Serializer $serializer
      */
-    public function __construct(DynamoDbClient $client, Marshaler $marshaler)
+    public function __construct(EntityManager $manager, LedEntityMapper $ledMapper, Serializer $serializer)
     {
-        $this->client = $client;
-        $this->marshaler = $marshaler;
+        $this->manager = $manager;
+        $this->ledMapper = $ledMapper;
+        $this->serializer = $serializer;
     }
-
 
     /**
      * {@inheritDoc}
      */
     public function all(): array
     {
-        $result = $this->client->scan([
-            'TableName' => LedEntity::TABLE_NAME
-        ]);
-
-        $leds = [];
-        foreach ($result->get('Items') as $item) {
-            $leds[] = $this->map($item);
-        }
-
-        return $leds;
+        $items = $this->manager->scan();
+        return array_map(function($item) {
+            $model = null;
+            try {
+                $model = $this->ledMapper->mapToModel($this->map($item));
+            } catch (LedInvalidException $exception) {
+                // log error
+            }
+            return $model;
+        }, $items);
     }
 
     /**
@@ -54,20 +61,19 @@ class LedRepository implements LedRepositoryInterface
      */
     public function get(string $ledId): Led
     {
-        $result = $this->client->getItem([
-            'TableName' => LedEntity::TABLE_NAME,
-            'Key' => $this->marshaler->marshalItem([
-                'id' => $ledId
-            ])
-        ]);
-
-        $item = $result->get('Item');
-
-        if (null === $item) {
+        try {
+            $item = $this->manager->getItem($ledId);
+        } catch (EntityNotFoundException $exception) {
             throw new LedNotFoundException("Led could not be find with id {$ledId}");
         }
 
-        return $this->map($item);
+        try {
+            $entity = $this->map($item);
+        } catch (LedInvalidException $e) {
+            throw new LedNotFoundException($e->getMessage());
+        }
+
+        return $this->ledMapper->mapToModel($entity);
     }
 
     /**
@@ -86,13 +92,12 @@ class LedRepository implements LedRepositoryInterface
             throw new LedInvalidException("The led already exists with ID {$led->getId()}");
         }
 
-        $entity = LedEntity::map($led);
-        $item = $this->marshaler->marshalItem($entity->toArray());
-
-        $this->client->putItem([
-            'TableName' => LedEntity::TABLE_NAME,
-            'Item' => $item
-        ]);
+        $entity = $this->ledMapper->mapToEntity($led);
+        try {
+            $this->manager->create($entity);
+        } catch (EntitySerializeException $e) {
+            throw new LedInvalidException($e->getMessage());
+        }
     }
 
     /**
@@ -106,13 +111,14 @@ class LedRepository implements LedRepositoryInterface
             throw new LedInvalidException("The led not exists with ID {$led->getId()}");
         }
 
-        $entity = LedEntity::map($led);
-        $item = $this->marshaler->marshalItem($entity->toArray());
+        $entity = $this->ledMapper->mapToEntity($led);
 
-        $this->client->putItem([
-            'TableName' => LedEntity::TABLE_NAME,
-            'Item' => $item
-        ]);
+        try {
+            $this->manager->update($entity);
+        } catch (EntitySerializeException $e) {
+            throw new LedInvalidException($e->getMessage());
+        }
+
     }
 
     public function delete(string $ledId): void
@@ -123,28 +129,20 @@ class LedRepository implements LedRepositoryInterface
             throw new LedInvalidException("The led not exists with ID {$ledId}");
         }
 
-        $this->client->deleteItem([
-            'TableName' => LedEntity::TABLE_NAME,
-            'Key' => $this->marshaler->marshalItem([
-                'id' => $ledId
-            ])
-        ]);
+        $this->manager->delete($ledId);
     }
-
 
     /**
      * @param array $item
-     * @return Led
+     * @return LedEntity
+     * @throws LedInvalidException
      */
-    private function map(array $item): Led
+    private function map(array $item): LedEntity
     {
-        $unmarshalItem = $this->marshaler->unmarshalItem($item);
-        $ledEntity = LedEntity::fill($unmarshalItem);
-
-        return new Led(
-            $ledEntity->getId(),
-            $ledEntity->getName(),
-            $ledEntity->getLastUpdate()
-        );
+        try {
+            return $this->serializer->denormalize($item, LedEntity::class, 'array');
+        } catch (ExceptionInterface $e) {
+            throw new LedInvalidException($e->getMessage());
+        }
     }
 }
