@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Adapter\RamseyUuidAdapter;
 use App\Commands\LedCreateCommand;
+use App\Commands\LedDeleteCommand;
 use App\Commands\LedGetCommand;
 use App\Commands\LedUpdateCommand;
 use App\Exceptions\ValidationException;
@@ -90,6 +91,22 @@ class LedController extends Controller
             $responseAdapter->setStatusCode(400);
             $responseAdapter->setData($exception->getMessage());
         }
+
+        return $responseAdapter->getResponse();
+    }
+
+    /**
+     * @param string $ledId
+     * @param LedRepositoryInterface $ledRepo
+     * @return JsonResponse
+     */
+    public function delete(string $ledId, LedRepositoryInterface $ledRepo): JsonResponse
+    {
+        $command = new LedDeleteCommand($ledId, $ledRepo);
+        $command->execute();
+
+        $responseAdapter = new IlluminateJsonResponseAdapter();
+        $responseAdapter->setStatusCode(204);
 
         return $responseAdapter->getResponse();
     }
