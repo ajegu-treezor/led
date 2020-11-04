@@ -4,10 +4,10 @@
 namespace App\Console\Commands;
 
 
+use App\Repositories\DynamoDb\EntityManager;
 use App\Repositories\Entity\LedEntity;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
-use Aws\DynamoDb\Marshaler;
 use Faker\Factory;
 use Illuminate\Console\Command;
 
@@ -20,14 +20,23 @@ class DbInit extends Command
     /** @var DynamoDbClient $client */
     private $client;
 
+    /** @var string */
+    private $table;
+
+    /** @var EntityManager  */
+    private $manager;
+
     /**
      * DbInit constructor.
      * @param DynamoDbClient $client
+     * @param EntityManager $manager
      */
-    public function __construct(DynamoDbClient $client)
+    public function __construct(DynamoDbClient $client, EntityManager $manager)
     {
         parent::__construct();
         $this->client = $client;
+        $this->table = getenv('DATABASE_NAME');
+        $this->manager = $manager;
     }
 
 
@@ -35,23 +44,23 @@ class DbInit extends Command
     {
         try {
             $this->client->deleteTable([
-                'TableName' => LedEntity::TABLE_NAME,
+                'TableName' => $this->table,
             ]);
         } catch (DynamoDbException $e) {
             // nothing
         }
 
         $table = [
-            'TableName' => LedEntity::TABLE_NAME,
+            'TableName' => $this->table,
             'AttributeDefinitions' => [
                 [
-                    'AttributeName' => LedEntity::PRIMARY_KEY,
+                    'AttributeName' => EntityManager::PK,
                     'AttributeType' => 'S',
                 ]
             ],
             'KeySchema' => [
                 [
-                    'AttributeName' => LedEntity::PRIMARY_KEY,
+                    'AttributeName' => EntityManager::PK,
                     'KeyType' => 'HASH',
                 ]
             ],
@@ -65,17 +74,13 @@ class DbInit extends Command
 
         if ($this->option('seed')) {
             $faker = Factory::create();
-            $marshaller = new Marshaler();
             for ($i = 0; $i < 10; $i++) {
                 $led = new LedEntity();
                 $led->setId($faker->uuid)
                     ->setName($faker->name)
                     ->setLastUpdate($faker->dateTime->getTimestamp());
 
-                $this->client->putItem([
-                    'TableName' => 'led',
-                    'Item' => $marshaller->marshalItem($led->toArray())
-                ]);
+                $this->manager->create($led);
             }
         }
     }
