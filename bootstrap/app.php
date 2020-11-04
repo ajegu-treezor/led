@@ -1,5 +1,6 @@
 <?php /** @noinspection PhpUnusedParameterInspection */
 
+use App\Http\Middleware\CorsMiddleware;
 use App\Providers\DynamoDbProvider;
 use App\Repositories\DynamoDb\LedRepository;
 use App\Repositories\LedRepositoryInterface;
@@ -83,6 +84,10 @@ $app->configure('app');
 // $app->routeMiddleware([
 //     'auth' => App\Http\Middleware\Authenticate::class,
 // ]);
+
+$app->middleware([
+    CorsMiddleware::class
+]);
 
 /*
 |--------------------------------------------------------------------------

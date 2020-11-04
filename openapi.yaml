@@ -1,0 +1,134 @@
+openapi: 3.0.0
+info:
+  title: 'Led API'
+  contact:
+    email: allan.jegu@treezor.com
+  version: 0.0.1
+servers:
+  -
+    url: 'http://localhost:80/'
+    description: local
+paths:
+  /led:
+    get:
+      tags:
+        - led
+      summary: 'List all led'
+      operationId: listLed
+      responses:
+        '200':
+          description: 'successful list'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Led'
+    post:
+      tags:
+        - led
+      summary: 'Create a led'
+      operationId: createLed
+      requestBody:
+        $ref: '#/components/requestBodies/LedRequestBody'
+      responses:
+        '201':
+          description: 'successful creation'
+        '400':
+          description: 'validation errors'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedRequestError'
+  '/led/{ledId}':
+    get:
+      tags:
+        - led
+      summary: 'Get a led by ID'
+      operationId: getLed
+      parameters:
+        -
+          name: ledId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Led/properties/id'
+      responses:
+        '200':
+          description: 'successful get'
+        '404':
+          $ref: '#/components/responses/LedNotFound'
+    put:
+      tags:
+        - led
+      summary: 'Update a led'
+      operationId: updateLed
+      parameters:
+        -
+          name: ledId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Led/properties/id'
+      requestBody:
+        $ref: '#/components/requestBodies/LedRequestBody'
+      responses:
+        '201':
+          description: 'successful creation'
+        '400':
+          description: 'validation errors'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedRequestError'
+    delete:
+      tags:
+        - led
+      summary: 'Delete a led'
+      operationId: deleteLed
+      parameters:
+        -
+          name: ledId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Led/properties/id'
+      responses:
+        '204':
+          description: 'successful deletion'
+components:
+  schemas:
+    Led:
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        lastUpdate:
+          type: integer
+      type: object
+    LedRequestError:
+      properties:
+        name:
+          type: array
+          items:
+            type: string
+      type: object
+  responses:
+    LedNotFound:
+      description: 'led not found'
+  requestBodies:
+    LedRequestBody:
+      description: 'Led request body'
+      required: true
+      content:
+        application/json:
+          schema:
+            properties:
+              name:
+                type: string
+            type: object
+tags:
+  -
+    name: led
