@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Adapter\RamseyUuidAdapter;
 use App\Commands\LedCreateCommand;
 use App\Commands\LedGetCommand;
+use App\Commands\LedUpdateCommand;
 use App\Exceptions\ValidationException;
 use App\Request\IlluminateRequestAdapter;
 use App\Response\IlluminateJsonResponseAdapter;
@@ -71,4 +72,25 @@ class LedController extends Controller
         return $responseAdapter->getResponse();
     }
 
+    /**
+     * @param string $ledId
+     * @param Request $request
+     * @param LedRepositoryInterface $ledRepo
+     * @return JsonResponse
+     */
+    public function update(string $ledId, Request $request, LedRepositoryInterface $ledRepo): JsonResponse
+    {
+        $responseAdapter = new IlluminateJsonResponseAdapter();
+        $responseAdapter->setStatusCode(200);
+        $requestAdapter = new IlluminateRequestAdapter($request);
+        $command = new LedUpdateCommand($ledId, $requestAdapter, $ledRepo);
+        try {
+            $command->execute();
+        } catch (ValidationException $exception) {
+            $responseAdapter->setStatusCode(400);
+            $responseAdapter->setData($exception->getMessage());
+        }
+
+        return $responseAdapter->getResponse();
+    }
 }
