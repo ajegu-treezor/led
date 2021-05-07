@@ -13,7 +13,6 @@ services:
 #      - "8080:8080"
 #  dynamodbgui:
 #    build: ./images/dynamogui
-#    links:
 #      - dynamodb
 #    environment:
 #      DYNAMO_ENDPOINT: http://dynamodb:8000
